@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧬 MutADN - Descubre las mutaciones especiales</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 30px;
+            transition: all 0.3s ease;
+        }
+
+        h1 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #2d3748;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            border-bottom: 3px solid #805ad5;
+            padding-bottom: 10px;
+        }
+
+        h1 span {
+            background: #805ad5;
+            color: white;
+            font-size: 0.5em;
+            padding: 5px 15px;
+            border-radius: 50px;
+            margin-left: auto;
+        }
+
+        .adn-card {
+            background: #f7fafc;
+            border-radius: 20px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
+        }
+
+        .adn-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #4a5568;
+            font-weight: 600;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .adn-visual {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .nucleotido {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: transform 0.2s;
+        }
+
+        .nucleotido:hover {
+            transform: scale(1.1);
+        }
+
+        .circulo {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2em;
+            color: white;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 5px;
+        }
+
+        .indice {
+            font-size: 0.7em;
+            color: #718096;
+            font-weight: 600;
+        }
+
+        /* Colores para cada base */
+        .A { background: #f56565; }  /* Rojo */
+        .T { background: #48bb78; }  /* Verde */
+        .C { background: #4299e1; }  /* Azul */
+        .G { background: #ecc94b; }  /* Amarillo */
+        .resaltado {
+            box-shadow: 0 0 0 4px #805ad5;
+            transform: scale(1.05);
+        }
+
+        .controls {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin: 25px 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .input-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .input-item {
+            flex: 1 1 200px;
+        }
+
+        .input-item label {
+            display: block;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+
+        .input-item input, .input-item select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1em;
+            transition: border 0.2s;
+            background: #f8fafc;
+        }
+
+        .input-item input:focus, .input-item select:focus {
+            outline: none;
+            border-color: #805ad5;
+        }
+
+        .btn-mutar {
+            background: linear-gradient(135deg, #805ad5 0%, #667eea 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 1.2em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 10px 20px rgba(128, 90, 213, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px auto 0;
+            width: fit-content;
+        }
+
+        .btn-mutar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(128, 90, 213, 0.4);
+        }
+
+        .btn-mutar:active {
+            transform: translateY(0);
+        }
+
+        .resultado-card {
+            background: linear-gradient(145deg, #faf5ff, #f3ebff);
+            border-radius: 20px;
+            padding: 25px;
+            margin: 20px 0;
+            border-left: 10px solid #805ad5;
+        }
+
+        .secuencia-line {
+            font-family: 'Courier New', monospace;
+            background: #1a202c;
+            color: #a0aec0;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 1.1em;
+            letter-spacing: 2px;
+            word-break: break-all;
+        }
+
+        .fenotipo {
+            font-size: 1.4em;
+            font-weight: 700;
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .fenotipo.enfermedad { background: #fed7d7; color: #c53030; }
+        .fenotipo.mejora { background: #c6f6d5; color: #276749; }
+        .fenotipo.normal { background: #bee3f8; color: #2c5282; }
+        .fenotipo.desconocido { background: #feebc8; color: #c05621; }
+
+        /* Contador de descubrimientos */
+        .descubrimientos {
+            background: #ebf8ff;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            border: 2px solid #4299e1;
+        }
+
+        .descubrimientos h3 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #2b6cb0;
+            margin-bottom: 15px;
+        }
+
+        .progreso {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .barra-progreso {
+            flex-grow: 1;
+            height: 20px;
+            background: #cbd5e0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .barra-llena {
+            height: 100%;
+            background: #4299e1;
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .contador {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #2c5282;
+        }
+
+        .lista-descubiertas {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .descubierta-item {
+            background: white;
+            padding: 8px 15px;
+            border-radius: 30px;
+            font-size: 0.9em;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-left: 5px solid #4299e1;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #718096;
+            font-size: 0.9em;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+
+        .animate-pulse {
+            animation: pulse 0.5s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>
+            🧬 MutADN
+            <span>Descubre las 5 mutaciones</span>
+        </h1>
+        <p style="color: #4a5568;">Modifica la secuencia de ADN y observa los efectos. Hay 5 mutaciones especiales ocultas. ¡Encuéntralas!</p>
+
+        <!-- Representación visual del ADN original (15 nucleótidos) -->
+        <div class="adn-card">
+            <div class="adn-title">
+                <span>🔬 Secuencia original de ADN</span>
+                <span class="badge" id="longitud"></span>
+            </div>
+            <div id="adnVisual" class="adn-visual"></div>
+        </div>
+
+        <!-- Controles de mutación -->
+        <div class="controls">
+            <div style="display: flex; gap: 20px; align-items: center; justify-content: center; flex-wrap: wrap;">
+                <div class="input-item">
+                    <label>📍 Posición a mutar (1-15)</label>
+                    <input type="number" id="posicion" min="1" max="15" value="1" step="1">
+                </div>
+                <div class="input-item">
+                    <label>🧪 Nueva base</label>
+                    <select id="base">
+                        <option value="A">A (Adenina)</option>
+                        <option value="T">T (Timina)</option>
+                        <option value="C">C (Citosina)</option>
+                        <option value="G">G (Guanina)</option>
+                    </select>
+                </div>
+            </div>
+            <button class="btn-mutar" id="mutarBtn">
+                ⚡ Mutar
+            </button>
+        </div>
+
+        <!-- Resultado de la mutación -->
+        <div class="resultado-card" id="resultado">
+            <div style="display: grid; gap: 15px;">
+                <div>
+                    <div style="font-weight: 600; color: #4a5568;">🧬 ADN original:</div>
+                    <div class="secuencia-line" id="adnOrig"></div>
+                </div>
+                <div>
+                    <div style="font-weight: 600; color: #4a5568;">⚡ ADN modificado:</div>
+                    <div class="secuencia-line" id="adnMut"></div>
+                </div>
+                <div>
+                    <div style="font-weight: 600; color: #4a5568;">🔁 ARN resultante:</div>
+                    <div class="secuencia-line" id="arnMut"></div>
+                </div>
+                <div>
+                    <div style="font-weight: 600; color: #4a5568;">🧪 Proteína resultante:</div>
+                    <div class="secuencia-line" id="proteinaMut"></div>
+                </div>
+                <div id="fenotipoContainer">
+                    <div style="font-weight: 600; color: #4a5568;">🧫 Fenotipo:</div>
+                    <div class="fenotipo" id="fenotipo">Esperando mutación...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Área de descubrimientos -->
+        <div class="descubrimientos">
+            <h3>
+                <span>🔍 Mutaciones especiales descubiertas</span>
+                <span class="contador" id="contadorDescubiertas">0/5</span>
+            </h3>
+            <div class="progreso">
+                <div class="barra-progreso">
+                    <div class="barra-llena" id="barraProgreso" style="width: 0%;"></div>
+                </div>
+            </div>
+            <div id="listaDescubiertas" class="lista-descubiertas">
+                <!-- Aquí se irán añadiendo las descubiertas -->
+                <p style="color: #718096; font-style: italic;" id="placeholderDescubiertas">Aún no has descubierto ninguna. ¡Sigue mutando!</p>
+            </div>
+        </div>
+
+        <footer>
+            ⚕️ Hay 5 mutaciones especiales ocultas (3 enfermedades y 2 mejoras). ¡A descubrirlas!
+        </footer>
+    </div>
+
+    <script>
+        // ---------- DATOS INICIALES ----------
+        // Secuencia de 15 nucleótidos (múltiplo de 3)
+        const adnInicial = "ATGGCCCTGGACTAC";  // 15 nt
+
+        // Código genético (igual)
+        const codigoGenetico = {
+            'AUA':'Ile', 'AUC':'Ile', 'AUU':'Ile', 'AUG':'Met',
+            'ACA':'Thr', 'ACC':'Thr', 'ACG':'Thr', 'ACU':'Thr',
+            'AAC':'Asn', 'AAU':'Asn', 'AAA':'Lys', 'AAG':'Lys',
+            'AGC':'Ser', 'AGU':'Ser', 'AGA':'Arg', 'AGG':'Arg',
+            'CUA':'Leu', 'CUC':'Leu', 'CUG':'Leu', 'CUU':'Leu',
+            'CCA':'Pro', 'CCC':'Pro', 'CCG':'Pro', 'CCU':'Pro',
+            'CAC':'His', 'CAU':'His', 'CAA':'Gln', 'CAG':'Gln',
+            'CGA':'Arg', 'CGC':'Arg', 'CGG':'Arg', 'CGU':'Arg',
+            'GUA':'Val', 'GUC':'Val', 'GUG':'Val', 'GUU':'Val',
+            'GCA':'Ala', 'GCC':'Ala', 'GCG':'Ala', 'GCU':'Ala',
+            'GAC':'Asp', 'GAU':'Asp', 'GAA':'Glu', 'GAG':'Glu',
+            'GGA':'Gly', 'GGC':'Gly', 'GGG':'Gly', 'GGU':'Gly',
+            'UCA':'Ser', 'UCC':'Ser', 'UCG':'Ser', 'UCU':'Ser',
+            'UUC':'Phe', 'UUU':'Phe', 'UUA':'Leu', 'UUG':'Leu',
+            'UAC':'Tyr', 'UAU':'Tyr', 'UAA':'_', 'UAG':'_',
+            'UGC':'Cys', 'UGU':'Cys', 'UGA':'_', 'UGG':'Trp',
+        };
+
+        // Mutaciones conocidas (posición 1-based, nueva base) -> descripción y tipo
+        // Ajustadas para 15 nucleótidos (algunas posiciones pueden quedar fuera, las reubicamos)
+        // Vamos a poner: 3,7,11 como enfermedades; 5,13 como mejoras (por ejemplo)
+        const mutacionesConocidas = {
+            '3-T': { desc: 'Enfermedad: anemia falciforme', tipo: 'enfermedad' },
+            '7-G': { desc: 'Mejora: crecimiento muscular acelerado', tipo: 'mejora' },
+            '11-A': { desc: 'Enfermedad: predisposición al Alzheimer', tipo: 'enfermedad' },
+            '5-C': { desc: 'Mejora: visión nocturna mejorada', tipo: 'mejora' },
+            '13-G': { desc: 'Enfermedad: fibrosis quística', tipo: 'enfermedad' },
+        };
+
+        // Objeto para llevar el registro de descubrimientos (inicialmente vacío)
+        let descubiertas = {};
+
+        // ---------- FUNCIONES ----------
+        function adnAArn(adn) {
+            return adn.replace(/T/g, 'U');
+        }
+
+        function traducir(arn) {
+            const aminoacidos = [];
+            for (let i = 0; i < arn.length; i += 3) {
+                const codon = arn.substr(i, 3);
+                if (codon.length === 3) {
+                    const aa = codigoGenetico[codon] || '?';
+                    aminoacidos.push(aa);
+                }
+            }
+            return aminoacidos.join('-');
+        }
+
+        function mutar(adn, posicion, nuevaBase) {
+            if (posicion < 1 || posicion > adn.length) return null;
+            const arr = adn.split('');
+            arr[posicion - 1] = nuevaBase;
+            return arr.join('');
+        }
+
+        function obtenerProteinaDesdeAdn(adn) {
+            const arn = adnAArn(adn);
+            return traducir(arn);
+        }
+
+        function obtenerFenotipo(adnOriginal, posicion, nuevaBase) {
+            const clave = posicion + '-' + nuevaBase;
+            if (mutacionesConocidas.hasOwnProperty(clave)) {
+                return mutacionesConocidas[clave];
+            }
+
+            const proteinaOriginal = obtenerProteinaDesdeAdn(adnOriginal);
+            const adnMutado = mutar(adnOriginal, posicion, nuevaBase);
+            if (!adnMutado) return { desc: 'Error en la mutación', tipo: 'desconocido' };
+            const proteinaMutada = obtenerProteinaDesdeAdn(adnMutado);
+
+            if (proteinaOriginal === proteinaMutada) {
+                return { desc: 'Mutación silenciosa (sin cambio en proteína)', tipo: 'normal' };
+            } else {
+                return { desc: 'Efecto desconocido (podría ser neutro o dañino)', tipo: 'desconocido' };
+            }
+        }
+
+        // Renderiza la secuencia de ADN con círculos de colores
+        function renderizarADN(adn, resaltarPos = null) {
+            const contenedor = document.getElementById('adnVisual');
+            contenedor.innerHTML = '';
+            for (let i = 0; i < adn.length; i++) {
+                const base = adn[i];
+                const nucleoDiv = document.createElement('div');
+                nucleoDiv.className = 'nucleotido';
+                const circulo = document.createElement('div');
+                circulo.className = `circulo ${base}`;
+                circulo.textContent = base;
+                if (resaltarPos === i+1) {
+                    circulo.classList.add('resaltado');
+                }
+                const indice = document.createElement('span');
+                indice.className = 'indice';
+                indice.textContent = i+1;
+                nucleoDiv.appendChild(circulo);
+                nucleoDiv.appendChild(indice);
+                contenedor.appendChild(nucleoDiv);
+            }
+        }
+
+        // Actualiza el contador de descubrimientos y la lista
+        function actualizarDescubrimientos(clave, fenotipoObj) {
+            if (!descubiertas.hasOwnProperty(clave) && mutacionesConocidas.hasOwnProperty(clave)) {
+                // Nueva mutación especial descubierta
+                descubiertas[clave] = fenotipoObj;
+            }
+            const total = Object.keys(mutacionesConocidas).length; // 5
+            const numDesc = Object.keys(descubiertas).length;
+            document.getElementById('contadorDescubiertas').textContent = `${numDesc}/${total}`;
+            document.getElementById('barraProgreso').style.width = (numDesc / total * 100) + '%';
+
+            const listaDiv = document.getElementById('listaDescubiertas');
+            listaDiv.innerHTML = '';
+            if (numDesc === 0) {
+                listaDiv.innerHTML = '<p style="color: #718096; font-style: italic;">Aún no has descubierto ninguna. ¡Sigue mutando!</p>';
+            } else {
+                for (let [clave, valor] of Object.entries(descubiertas)) {
+                    const [pos, base] = clave.split('-');
+                    const item = document.createElement('div');
+                    item.className = 'descubierta-item';
+                    item.innerHTML = `<strong>${pos}→${base}</strong>: ${valor.desc}`;
+                    listaDiv.appendChild(item);
+                }
+            }
+        }
+
+        // Actualiza el resultado en la UI
+        function actualizarResultado(adnMut, arnMut, proteina, fenotipoObj, clave) {
+            document.getElementById('adnOrig').textContent = adnInicial;
+            document.getElementById('adnMut').textContent = adnMut;
+            document.getElementById('arnMut').textContent = arnMut;
+            document.getElementById('proteinaMut').textContent = proteina;
+            const fenotipoDiv = document.getElementById('fenotipo');
+            fenotipoDiv.textContent = fenotipoObj.desc;
+            fenotipoDiv.className = `fenotipo ${fenotipoObj.tipo}`;
+            // Añadir icono según tipo
+            const icono = fenotipoObj.tipo === 'mejora' ? '✅' : 
+                          (fenotipoObj.tipo === 'enfermedad' ? '⚠️' : 
+                          (fenotipoObj.tipo === 'normal' ? '🔵' : '❓'));
+            fenotipoDiv.innerHTML = `${icono} ${fenotipoObj.desc}`;
+
+            // Si es una mutación especial, actualizar descubrimientos
+            if (mutacionesConocidas.hasOwnProperty(clave)) {
+                actualizarDescubrimientos(clave, fenotipoObj);
+            }
+        }
+
+        // Inicialización
+        window.onload = function() {
+            document.getElementById('longitud').textContent = adnInicial.length + ' nucleótidos';
+            renderizarADN(adnInicial);
+
+            // Mostrar proteína original al inicio
+            const arnOriginal = adnAArn(adnInicial);
+            const proteinaOriginal = traducir(arnOriginal);
+            document.getElementById('adnOrig').textContent = adnInicial;
+            document.getElementById('adnMut').textContent = adnInicial;
+            document.getElementById('arnMut').textContent = arnOriginal;
+            document.getElementById('proteinaMut').textContent = proteinaOriginal;
+            document.getElementById('fenotipo').innerHTML = '🔵 Secuencia original (sin mutación)';
+            document.getElementById('fenotipo').className = 'fenotipo normal';
+
+            // Inicializar descubrimientos
+            actualizarDescubrimientos(null, null);
+
+            // Evento del botón mutar
+            document.getElementById('mutarBtn').addEventListener('click', function() {
+                const posInput = document.getElementById('posicion');
+                const baseSelect = document.getElementById('base');
+                const pos = parseInt(posInput.value);
+                const base = baseSelect.value;
+
+                if (isNaN(pos) || pos < 1 || pos > adnInicial.length) {
+                    alert(`Posición no válida. Debe estar entre 1 y ${adnInicial.length}`);
+                    return;
+                }
+
+                // Resaltar la posición elegida en la representación visual
+                renderizarADN(adnInicial, pos);
+
+                const adnMutado = mutar(adnInicial, pos, base);
+                if (!adnMutado) return;
+
+                const arnMutado = adnAArn(adnMutado);
+                const proteinaMutada = traducir(arnMutado);
+                const clave = pos + '-' + base;
+                const fenotipoObj = obtenerFenotipo(adnInicial, pos, base);
+
+                actualizarResultado(adnMutado, arnMutado, proteinaMutada, fenotipoObj, clave);
+
+                // Pequeña animación
+                document.querySelector('.resultado-card').classList.add('animate-pulse');
+                setTimeout(() => {
+                    document.querySelector('.resultado-card').classList.remove('animate-pulse');
+                }, 500);
+            });
+
+            // Al cambiar la posición, resaltar en el gráfico
+            document.getElementById('posicion').addEventListener('input', function(e) {
+                const pos = parseInt(e.target.value);
+                if (!isNaN(pos) && pos >= 1 && pos <= adnInicial.length) {
+                    renderizarADN(adnInicial, pos);
+                } else {
+                    renderizarADN(adnInicial);
+                }
+            });
+        };
+    </script>
+</body>
+</html>
