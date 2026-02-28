@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de Mutaciones de ADN</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 0 20px;
+            background-color: #f4f9ff;
+            color: #333;
+        }
+        h1 {
+            color: #0066cc;
+            text-align: center;
+        }
+        .adn-box {
+            background: #e6f0ff;
+            border: 2px solid #0066cc;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 1.2em;
+            text-align: center;
+        }
+        .controls {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .controls label {
+            display: inline-block;
+            width: 120px;
+            font-weight: bold;
+        }
+        .controls input, .controls select {
+            padding: 8px;
+            font-size: 1em;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin: 5px 0;
+        }
+        .controls button {
+            background: #0066cc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1.1em;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            display: block;
+            width: 100%;
+        }
+        .controls button:hover {
+            background: #0052a3;
+        }
+        .resultado {
+            background: #e9ffe9;
+            border: 2px solid #00aa00;
+            border-radius: 10px;
+            padding: 15px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .resultado p {
+            margin: 8px 0;
+        }
+        .fenotipo {
+            font-weight: bold;
+            color: #b30000;
+        }
+        .info {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 20px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧬 Juego de Mutaciones de ADN</h1>
+
+    <div class="adn-box" id="secuenciaOriginal"></div>
+    <p>Longitud: <span id="longitud"></span> nucleótidos</p>
+
+    <div class="controls">
+        <h3>Introduce una mutación</h3>
+        <label for="posicion">Posición (1‑based):</label>
+        <input type="number" id="posicion" min="1" value="1"><br>
+
+        <label for="base">Nueva base:</label>
+        <select id="base">
+            <option value="A">A</option>
+            <option value="T">T</option>
+            <option value="C">C</option>
+            <option value="G">G</option>
+        </select><br>
+
+        <button id="mutarBtn">MutAR</button>
+    </div>
+
+    <div class="resultado" id="resultado">
+        <p><strong>ADN original:</strong> <span id="adnOrig"></span></p>
+        <p><strong>ADN mutado:</strong> <span id="adnMut"></span></p>
+        <p><strong>ARN mutado:</strong> <span id="arnMut"></span></p>
+        <p><strong>Proteína mutada:</strong> <span id="proteinaMut"></span></p>
+        <p><strong>Fenotipo:</strong> <span id="fenotipo" class="fenotipo"></span></p>
+    </div>
+
+    <div class="info">
+        <strong>✨ Mutaciones especiales predefinidas:</strong>
+        <ul>
+            <li>Posición 5 → T : <em>Enfermedad: anemia falciforme</em></li>
+            <li>Posición 10 → G : <em>Mejora: crecimiento muscular acelerado</em></li>
+            <li>Posición 15 → A : <em>Enfermedad: predisposición al Alzheimer</em></li>
+            <li>Posición 20 → C : <em>Mejora: visión nocturna mejorada</em></li>
+            <li>Posición 25 → G : <em>Enfermedad: fibrosis quística</em></li>
+        </ul>
+        <p><small>Otras mutaciones se clasifican como silenciosas (sin cambio de proteína) o de efecto desconocido.</small></p>
+    </div>
+
+    <script>
+        // ---------- DATOS INICIALES ----------
+        const adnInicial = "ATGGCCCTGGACTACCTGACCCTGGCC";  // 27 nucleótidos
+
+        // Código genético: codón de ARN -> aminoácido (tres letras)
+        const codigoGenetico = {
+            'AUA':'Ile', 'AUC':'Ile', 'AUU':'Ile', 'AUG':'Met',
+            'ACA':'Thr', 'ACC':'Thr', 'ACG':'Thr', 'ACU':'Thr',
+            'AAC':'Asn', 'AAU':'Asn', 'AAA':'Lys', 'AAG':'Lys',
+            'AGC':'Ser', 'AGU':'Ser', 'AGA':'Arg', 'AGG':'Arg',
+            'CUA':'Leu', 'CUC':'Leu', 'CUG':'Leu', 'CUU':'Leu',
+            'CCA':'Pro', 'CCC':'Pro', 'CCG':'Pro', 'CCU':'Pro',
+            'CAC':'His', 'CAU':'His', 'CAA':'Gln', 'CAG':'Gln',
+            'CGA':'Arg', 'CGC':'Arg', 'CGG':'Arg', 'CGU':'Arg',
+            'GUA':'Val', 'GUC':'Val', 'GUG':'Val', 'GUU':'Val',
+            'GCA':'Ala', 'GCC':'Ala', 'GCG':'Ala', 'GCU':'Ala',
+            'GAC':'Asp', 'GAU':'Asp', 'GAA':'Glu', 'GAG':'Glu',
+            'GGA':'Gly', 'GGC':'Gly', 'GGG':'Gly', 'GGU':'Gly',
+            'UCA':'Ser', 'UCC':'Ser', 'UCG':'Ser', 'UCU':'Ser',
+            'UUC':'Phe', 'UUU':'Phe', 'UUA':'Leu', 'UUG':'Leu',
+            'UAC':'Tyr', 'UAU':'Tyr', 'UAA':'_', 'UAG':'_',
+            'UGC':'Cys', 'UGU':'Cys', 'UGA':'_', 'UGG':'Trp',
+        };
+
+        // Mutaciones conocidas (posición 1-based, nueva base) -> descripción del fenotipo
+        const mutacionesConocidas = {
+            '5-T': 'Enfermedad: anemia falciforme (cambio en la hemoglobina)',
+            '10-G': 'Mejora: crecimiento muscular acelerado',
+            '15-A': 'Enfermedad: predisposición al Alzheimer',
+            '20-C': 'Mejora: visión nocturna mejorada',
+            '25-G': 'Enfermedad: fibrosis quística',
+        };
+
+        // ---------- FUNCIONES ----------
+        function adnAArn(adn) {
+            return adn.replace(/T/g, 'U');
+        }
+
+        function traducir(arn) {
+            const aminoacidos = [];
+            for (let i = 0; i < arn.length; i += 3) {
+                const codon = arn.substr(i, 3);
+                if (codon.length === 3) {
+                    const aa = codigoGenetico[codon] || '?';
+                    aminoacidos.push(aa);
+                }
+            }
+            return aminoacidos.join('-');
+        }
+
+        function mutar(adn, posicion, nuevaBase) {
+            if (posicion < 1 || posicion > adn.length) return null;
+            const arr = adn.split('');
+            arr[posicion - 1] = nuevaBase;
+            return arr.join('');
+        }
+
+        // Calcula la proteína de una secuencia de ADN (para comparar)
+        function obtenerProteinaDesdeAdn(adn) {
+            const arn = adnAArn(adn);
+            return traducir(arn);
+        }
+
+        function obtenerFenotipo(adnOriginal, posicion, nuevaBase) {
+            const clave = posicion + '-' + nuevaBase;
+            if (mutacionesConocidas.hasOwnProperty(clave)) {
+                return mutacionesConocidas[clave];
+            }
+
+            // Si no está en la lista, comparamos proteínas
+            const proteinaOriginal = obtenerProteinaDesdeAdn(adnOriginal);
+            const adnMutado = mutar(adnOriginal, posicion, nuevaBase);
+            if (!adnMutado) return 'Error en la mutación';
+            const proteinaMutada = obtenerProteinaDesdeAdn(adnMutado);
+
+            if (proteinaOriginal === proteinaMutada) {
+                return 'Fenotipo normal (mutación silenciosa)';
+            } else {
+                return 'Fenotipo desconocido (podría ser neutro o tener efecto no clasificado)';
+            }
+        }
+
+        // ---------- INICIALIZACIÓN DE LA PÁGINA ----------
+        window.onload = function() {
+            document.getElementById('secuenciaOriginal').innerText = adnInicial;
+            document.getElementById('longitud').innerText = adnInicial.length;
+            // Mostrar valores por defecto en el resultado (sin mutación)
+            document.getElementById('adnOrig').innerText = adnInicial;
+            document.getElementById('adnMut').innerText = adnInicial;
+            document.getElementById('arnMut').innerText = adnAArn(adnInicial);
+            document.getElementById('proteinaMut').innerText = traducir(adnAArn(adnInicial));
+            document.getElementById('fenotipo').innerText = 'Fenotipo original (sin mutación)';
+
+            // Botón de mutación
+            document.getElementById('mutarBtn').addEventListener('click', function() {
+                const posInput = document.getElementById('posicion');
+                const baseSelect = document.getElementById('base');
+
+                const pos = parseInt(posInput.value);
+                const base = baseSelect.value;
+
+                // Validaciones
+                if (isNaN(pos) || pos < 1 || pos > adnInicial.length) {
+                    alert('Posición no válida. Debe estar entre 1 y ' + adnInicial.length);
+                    return;
+                }
+
+                // Aplicar mutación
+                const adnMutado = mutar(adnInicial, pos, base);
+                if (!adnMutado) {
+                    alert('Error al mutar');
+                    return;
+                }
+
+                const arnMutado = adnAArn(adnMutado);
+                const proteinaMutada = traducir(arnMutado);
+                const fenotipo = obtenerFenotipo(adnInicial, pos, base);
+
+                // Mostrar resultados
+                document.getElementById('adnOrig').innerText = adnInicial;
+                document.getElementById('adnMut').innerText = adnMutado;
+                document.getElementById('arnMut').innerText = arnMutado;
+                document.getElementById('proteinaMut').innerText = proteinaMutada;
+                document.getElementById('fenotipo').innerText = fenotipo;
+            });
+        };
+    </script>
+</body>
+</html>
